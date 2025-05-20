@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Get Your Location</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #location {
+      margin: 20px 0;
+      font-size: 1.2rem;
+      color: #444;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .loading {
+      font-style: italic;
+      color: #888;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Find Your Location</h1>
+  <p id="location">Click the button below to get your location.</p>
+  <button id="getLocation">Get Location</button>
+
+  <script>
+    const getLocationBtn = document.getElementById("getLocation");
+    const locationText = document.getElementById("location");
+
+    function showMessage(message, className = "") {
+      locationText.innerText = message;
+      locationText.className = className;
+    }
+
+    function gotLocation(position) {
+      console.log(position.toJSON());
+      const { latitude, longitude, accuracy } = position.coords;
+      showMessage(`📍 Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`);
+    }
+
+    function handleError(error) {
+      let message = "Unable to retrieve location.";
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          message = "❌ Permission denied. Please allow location access.";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          message = "❌ Location information is unavailable.";
+          break;
+        case error.TIMEOUT:
+          message = "❌ The request to get your location timed out.";
+          break;
+      }
+      showMessage(message, "error");
+    }
+
+    getLocationBtn.addEventListener("click", () => {
+      if (navigator.geolocation) {
+        showMessage("🔄 Fetching your location...", "loading");
+        navigator.geolocation.getCurrentPosition(gotLocation, handleError);
+      } else {
+        showMessage("❌ Geolocation is not supported by your browser.", "error");
+      }
+    });
+  </script>
+</body>
+</html>

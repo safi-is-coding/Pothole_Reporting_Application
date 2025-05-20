@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pothole Reporter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 350px;
+      text-align: center;
+    }
+
+    input[type="file"], button {
+      margin: 1rem 0;
+      width: 100%;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #333;
+    }
+
+    .loading {
+      color: orange;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Report a Pothole</h2>
+    <form id="uploadForm">
+      <input type="file" id="videoInput" name="video" accept="video/*" required />
+      <button type="submit">Upload Report</button>
+    </form>
+    <p id="status" class="status"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const videoInput = document.getElementById('videoInput');
+    const status = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.textContent = "Getting location...";
+      status.className = "status loading";
+
+      if (!navigator.geolocation) {
+        status.textContent = "Geolocation not supported.";
+        status.className = "status error";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+        const timestamp = new Date().toISOString();
+
+        const file = videoInput.files[0];
+        if (!file) {
+          status.textContent = "Please select a video file.";
+          status.className = "status error";
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("video", file);
+        formData.append("latitude", latitude);
+        formData.append("longitude", longitude);
+        formData.append("accuracy", accuracy);
+        formData.append("timestamp", timestamp);
+
+        status.textContent = "Uploading...";
+        status.className = "status loading";
+
+        try {
+          const response = await fetch("http://localhost:8000/api/v1/pothole", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            status.textContent = data.message || "Pothole report submitted!";
+            status.className = "status success";
+          } else {
+            status.textContent = data.message || "Upload failed.";
+            status.className = "status error";
+          }
+        } catch (error) {
+          console.error(error);
+          status.textContent = "An error occurred during upload.";
+          status.className = "status error";
+        }
+      }, (error) => {
+        console.error(error);
+        status.textContent = "Location access denied.";
+        status.className = "status error";
+      });
+    });
+  </script>
+</body>
+</html>
