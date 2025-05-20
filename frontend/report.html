@@ -232,7 +232,7 @@
             showToast("Camera not supported", "error");
             return;
           }
-          
+
           try {
             stream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: { exact: "environment" } },
@@ -306,7 +306,7 @@
         status.textContent = "Uploading...";
 
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://localhost:8000/api/v1/pothole", true);
+        xhr.open("POST", "https://pothole-recording-backend.vercel.app/api/v1/pothole", true);
 
         xhr.upload.onprogress = function (e) {
           if (e.lengthComputable) {

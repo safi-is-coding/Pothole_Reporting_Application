@@ -1,18 +1,17 @@
-{
+
+  
+  {
     "version": 2,
     "builds": [
       {
-        "src": "server.js",
-        "use": "@vercel/node",
-        "config": {
-          "includeFiles": ["dist/**"]
-        }
+        "src": "api/v1/pothole.js",
+        "use": "@vercel/node"
       }
     ],
     "routes": [
       {
-        "src": "/(.*)",
-        "dest": "server.js"
+        "src": "/api/v1/pothole",
+        "dest": "api/v1/pothole.js"
       }
     ]
   }
