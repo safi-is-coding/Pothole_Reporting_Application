@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pothole Reporter</title>
+
+  <!-- Toastify for notifications -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
+      font-family: "Segoe UI", sans-serif;
+      background: #f5f7fa;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -18,21 +23,30 @@
       background: white;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 350px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 400px;
       text-align: center;
+      position: relative;
     }
 
-    input[type="file"], button {
-      margin: 1rem 0;
+    h2 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    video {
       width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
     }
 
     button {
+      padding: 0.7rem;
+      width: 100%;
+      margin: 0.3rem 0;
       background-color: #007bff;
       color: white;
       border: none;
-      padding: 0.75rem;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
@@ -42,100 +56,231 @@
       background-color: #0056b3;
     }
 
+    #recordAgainBtn {
+      background-color: #6c757d;
+    }
+
+    #recordAgainBtn:hover {
+      background-color: #5a6268;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background-color: #e9ecef;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 1rem;
+      height: 10px;
+      display: none;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #28a745;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .spinner {
+      display: none;
+      margin: 10px auto;
+    }
+
+    .spinner div {
+      width: 18px;
+      height: 18px;
+      margin: 2px;
+      background-color: #007bff;
+      border-radius: 100%;
+      display: inline-block;
+      animation: sk-bounce 1.4s infinite ease-in-out both;
+    }
+
+    .spinner div:nth-child(2) {
+      animation-delay: -0.32s;
+    }
+
+    .spinner div:nth-child(3) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes sk-bounce {
+      0%, 80%, 100% { transform: scale(0); }  
+      40% { transform: scale(1.0); }
+    }
+
     .status {
       margin-top: 1rem;
       font-size: 0.9rem;
-      color: #333;
-    }
-
-    .loading {
-      color: orange;
-    }
-
-    .success {
-      color: green;
-    }
-
-    .error {
-      color: red;
+      color: #555;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Report a Pothole</h2>
-    <form id="uploadForm">
-      <input type="file" id="videoInput" name="video" accept="video/*" required />
-      <button type="submit">Upload Report</button>
-    </form>
+    <video id="preview" autoplay muted></video>
+
+    <button id="recordBtn">Start Recording</button>
+    <button id="uploadBtn" type="button" disabled>Upload</button>
+    <button id="recordAgainBtn" style="display:none;">Record Again</button>
+
+    <div class="spinner" id="spinner">
+      <div></div><div></div><div></div>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
     <p id="status" class="status"></p>
   </div>
 
   <script>
-    const form = document.getElementById('uploadForm');
-    const videoInput = document.getElementById('videoInput');
-    const status = document.getElementById('status');
+    const recordBtn = document.getElementById("recordBtn");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const recordAgainBtn = document.getElementById("recordAgainBtn");
+    const preview = document.getElementById("preview");
+    const status = document.getElementById("status");
+    const spinner = document.getElementById("spinner");
+    const progressBar = document.getElementById("progressBar");
+    const progressFill = document.getElementById("progressFill");
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      status.textContent = "Getting location...";
-      status.className = "status loading";
+    let mediaRecorder, videoBlob, stream;
+    let chunks = [];
+    let isRecording = false;
 
-      if (!navigator.geolocation) {
-        status.textContent = "Geolocation not supported.";
-        status.className = "status error";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        const accuracy = position.coords.accuracy;
-        const timestamp = new Date().toISOString();
-
-        const file = videoInput.files[0];
-        if (!file) {
-          status.textContent = "Please select a video file.";
-          status.className = "status error";
-          return;
+    function showToast(msg, type = "success") {
+      Toastify({
+        text: msg,
+        duration: 3000,
+        gravity: "bottom",
+        position: "center",
+        style: {
+          background: type === "success" ? "#28a745" : "#dc3545"
         }
+      }).showToast();
+    }
+
+    function resetUI() {
+      preview.src = "";
+      preview.srcObject = null;
+      preview.controls = false;
+      uploadBtn.disabled = true;
+      recordAgainBtn.style.display = "none";
+      progressBar.style.display = "none";
+      progressFill.style.width = "0%";
+    }
+
+    async function getLocation() {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve(pos.coords),
+          err => reject("Location access denied.")
+        );
+      });
+    }
+
+    recordBtn.onclick = async () => {
+      if (!isRecording) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          preview.srcObject = stream;
+
+          chunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = e => chunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            videoBlob = new Blob(chunks, { type: 'video/webm' });
+            preview.src = URL.createObjectURL(videoBlob);
+            preview.srcObject = null;
+            preview.controls = true;
+            preview.play();
+
+            uploadBtn.disabled = false;
+            recordAgainBtn.style.display = "inline-block";
+            status.textContent = "Recording complete.";
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          recordBtn.textContent = "Stop Recording";
+          uploadBtn.disabled = true;
+          status.textContent = "Recording...";
+        } catch (err) {
+          showToast("Camera access denied", "error");
+        }
+      } else {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+        isRecording = false;
+        recordBtn.textContent = "Start Recording";
+      }
+    };
+
+    recordAgainBtn.onclick = () => {
+      resetUI();
+      status.textContent = "";
+    };
+
+    uploadBtn.onclick = async (e) => {
+      e.preventDefault();
+
+      if (!videoBlob) return showToast("No video to upload.", "error");
+
+      try {
+        status.textContent = "Getting location...";
+        const { latitude, longitude, accuracy } = await getLocation();
 
         const formData = new FormData();
-        formData.append("video", file);
+        formData.append("video", videoBlob, "pothole.webm");
         formData.append("latitude", latitude);
         formData.append("longitude", longitude);
         formData.append("accuracy", accuracy);
-        formData.append("timestamp", timestamp);
+        formData.append("timestamp", new Date().toISOString());
 
+        spinner.style.display = "block";
+        progressBar.style.display = "block";
         status.textContent = "Uploading...";
-        status.className = "status loading";
 
-        try {
-          const response = await fetch("http://localhost:8000/api/v1/pothole", {
-            method: "POST",
-            body: formData
-          });
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8000/api/v1/pothole", true);
 
-          const data = await response.json();
-
-          if (response.ok) {
-            status.textContent = data.message || "Pothole report submitted!";
-            status.className = "status success";
-          } else {
-            status.textContent = data.message || "Upload failed.";
-            status.className = "status error";
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressFill.style.width = percent + "%";
           }
-        } catch (error) {
-          console.error(error);
-          status.textContent = "An error occurred during upload.";
-          status.className = "status error";
-        }
-      }, (error) => {
-        console.error(error);
-        status.textContent = "Location access denied.";
-        status.className = "status error";
-      });
-    });
+        };
+
+        xhr.onload = function () {
+          spinner.style.display = "none";
+          progressBar.style.display = "none";
+          if (xhr.status === 200 || xhr.status === 201) {
+            showToast("Upload successful!", "success");
+            status.textContent = "Upload successful!";
+            resetUI();
+          } else {
+            showToast("Upload failed.", "error");
+            status.textContent = "Upload failed.";
+          }
+        };
+
+        xhr.onerror = function () {
+          spinner.style.display = "none";
+          progressBar.style.display = "none";
+          showToast("Network error", "error");
+          status.textContent = "Network error.";
+        };
+
+        xhr.send(formData);
+      } catch (err) {
+        spinner.style.display = "none";
+        progressBar.style.display = "none";
+        showToast(err.toString(), "error");
+        status.textContent = err.toString();
+      }
+    };
   </script>
 </body>
 </html>

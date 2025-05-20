@@ -1,36 +1,42 @@
+// const cloudinary = require('cloudinary').v2;
+// const fs =  require("fs")
+
+// cloudinary.config({ 
+//     cloud_name: process.env.CLOUDINARY_CLOUD_NAME , 
+//     api_key: process.env.CLOUDINARY_API_KEY , 
+//     api_secret: process.env.CLOUDINARY_API_SECRET  
+// });
+
+
 const cloudinary = require('cloudinary').v2;
-const fs =  require("fs")
+const fs = require("fs");
 
 cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME , 
-    api_key: process.env.CLOUDINARY_API_KEY , 
-    api_secret: process.env.CLOUDINARY_API_SECRET  
+  cloud_name: "dpfb1od3c", 
+  api_key: "988836346312584", 
+  api_secret: "h4pbbvxXRBse9QMvcz4I8iL9KL4"
 });
 
-
 const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        console.log(localFilePath);
-        if(!localFilePath) return null
-        
-        // upload the file on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        
-        // file has been uploaded successfully
-        console.log("File is uploaded on cloudinary", response.url);
+  try {
+    if (!localFilePath) return null;
 
-        fs.unlinkSync(localFilePath)
-        return response
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "video",
+      folder: "pothole-reports"
+    });
 
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temp file as the upload operation got failed
-        return null
-    }
-}
+    fs.unlinkSync(localFilePath); // Cleanup temp file
+    return response;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+    return null;
+  }
+};
 
-module.exports = uploadOnCloudinary
+module.exports = uploadOnCloudinary;
+
 
 
     // async function run() {
