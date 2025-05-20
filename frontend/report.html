@@ -10,13 +10,32 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
   <style>
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: "Segoe UI", sans-serif;
       background: #f5f7fa;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
       height: 100vh;
+      background-image: linear-gradient(120deg, rgb(211, 211, 255), rgb(216, 255, 216), rgb(255, 205, 214),rgb(255, 202, 255));
+    }
+
+    nav{
+      position: absolute;
+      top: 0;
+      background-color: rgb(200, 200, 255);
+      width: 100vw;
+      height:3rem;
+      text-align: center;
+      box-shadow: 0px 2px 5px 0 gray;
+      margin-bottom: 30px;
     }
 
     .container {
@@ -24,14 +43,22 @@
       padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      width: 400px;
+      width: 350px;
       text-align: center;
       position: relative;
     }
 
-    h2 {
+    h1{
+      font-family: Georgia, 'Times New Roman', Times, serif;
+      position: relative;
+      top: 10px;
+    }
+
+    h4 {
       margin-bottom: 1rem;
-      color: #333;
+      color: #585858;
+      text-decoration: underline;
+      font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     }
 
     video {
@@ -50,6 +77,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     }
 
     button:hover {
@@ -114,15 +142,29 @@
       font-size: 0.9rem;
       color: #555;
     }
+
+    .recording{
+      background-color: #2eab4b;
+    }
+    .recorded{
+      background-color: #ffc107;
+    }
+
+    
+
   </style>
 </head>
 <body>
+  <nav>
+    <h1>Pothole Reporting</h1>
+  </nav>
+
   <div class="container">
-    <h2>Report a Pothole</h2>
+    <h4>Record a Pothole</h4>
     <video id="preview" autoplay muted></video>
 
     <button id="recordBtn">Start Recording</button>
-    <button id="uploadBtn" type="button" disabled>Upload</button>
+    <button id="uploadBtn" type="button" style="background-color: slateblue;">Upload Video</button>
     <button id="recordAgainBtn" style="display:none;">Record Again</button>
 
     <div class="spinner" id="spinner">
@@ -185,7 +227,22 @@
     recordBtn.onclick = async () => {
       if (!isRecording) {
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast("Camera not supported", "error");
+            return;
+          }
+          
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: { exact: "environment" } },
+              audio: true
+            });
+          } catch (err) {
+            showToast("Back camera not available, using default camera", "error");
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          }
+
           preview.srcObject = stream;
 
           chunks = [];
@@ -201,11 +258,13 @@
             uploadBtn.disabled = false;
             recordAgainBtn.style.display = "inline-block";
             status.textContent = "Recording complete.";
+
           };
 
           mediaRecorder.start();
           isRecording = true;
           recordBtn.textContent = "Stop Recording";
+          recordBtn.style.backgroundColor = "#2eab4b";
           uploadBtn.disabled = true;
           status.textContent = "Recording...";
         } catch (err) {
@@ -216,6 +275,8 @@
         stream.getTracks().forEach(track => track.stop());
         isRecording = false;
         recordBtn.textContent = "Start Recording";
+        recordBtn.style.backgroundColor = "#007bff";
+
       }
     };
 
