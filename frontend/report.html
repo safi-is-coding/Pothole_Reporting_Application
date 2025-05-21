@@ -160,7 +160,7 @@
   </nav>
 
   <div class="container">
-    <h4>Record a Pothole</h4>
+    <h4 id="welcome"></h4>
     <video id="preview" autoplay muted></video>
 
     <button id="recordBtn">Start Recording</button>
@@ -306,7 +306,8 @@
         status.textContent = "Uploading...";
 
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://pothole-recording-backend.vercel.app/api/v1/pothole", true);
+        console.log("abc");
+        xhr.open("POST", "http://localhost:8000/api/v1/pothole", true);
 
         xhr.upload.onprogress = function (e) {
           if (e.lengthComputable) {
@@ -343,6 +344,20 @@
         status.textContent = err.toString();
       }
     };
+
+    // const welcome = document.getElementById("welcome")
+
+    const welcome = document.getElementById("welcome");
+
+  fetch("https://pothole-recording-backend.vercel.app")
+    .then(response => response.text())
+    .then(data => {
+      welcome.textContent = data;
+    })
+    .catch(err => {
+      console.error("Failed to fetch welcome message:", err);
+      welcome.textContent = "Welcome to Pothole Reporting!";
+    });
   </script>
 </body>
 </html>

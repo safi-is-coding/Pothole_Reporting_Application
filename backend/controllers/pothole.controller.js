@@ -3,7 +3,12 @@ const Pothole = require('../models/pothole.model.js');
 
 exports.sendPotholeRecordingAndLocation = async (req, res) => {
   try {
+
+    console.log("reached controller...");
+
+
     if (!req.file) {
+      console.log(" no video file uploaded");
       return res.status(400).json({ message: 'No video file uploaded' });
     }
 
@@ -22,6 +27,7 @@ exports.sendPotholeRecordingAndLocation = async (req, res) => {
     }
 
     const videoFilePath = req.file.path;
+    console.log("Video file path:", videoFilePath);
 
     // Upload to Cloudinary using utility function
     const cloudinaryResponse = await uploadOnCloudinary(videoFilePath);
@@ -40,7 +46,7 @@ exports.sendPotholeRecordingAndLocation = async (req, res) => {
       timestamp: timestamp ? new Date(timestamp) : new Date()
     });
 
-    // console.log(pothole);
+    console.log(pothole);
 
     return res.status(201).json({
       message: 'Pothole reported successfully',
