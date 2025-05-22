@@ -10,7 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
   <style>
-    *{
+    * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -24,15 +24,15 @@
       justify-content: center;
       flex-direction: column;
       height: 100vh;
-      background-image: linear-gradient(120deg, rgb(211, 211, 255), rgb(216, 255, 216), rgb(255, 205, 214),rgb(255, 202, 255));
+      background-image: linear-gradient(120deg, rgb(211, 211, 255), rgb(216, 255, 216), rgb(255, 205, 214), rgb(255, 202, 255));
     }
 
-    nav{
+    nav {
       position: absolute;
       top: 0;
       background-color: rgb(200, 200, 255);
       width: 100vw;
-      height:3rem;
+      height: 3rem;
       text-align: center;
       box-shadow: 0px 2px 5px 0 gray;
       margin-bottom: 30px;
@@ -48,7 +48,7 @@
       position: relative;
     }
 
-    h1{
+    h1 {
       font-family: Georgia, 'Times New Roman', Times, serif;
       position: relative;
       top: 10px;
@@ -77,7 +77,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+      font-family: 'Trebuchet MS', sans-serif;
     }
 
     button:hover {
@@ -143,15 +143,13 @@
       color: #555;
     }
 
-    .recording{
+    .recording {
       background-color: #2eab4b;
     }
-    .recorded{
+
+    .recorded {
       background-color: #ffc107;
     }
-
-    
-
   </style>
 </head>
 <body>
@@ -160,11 +158,11 @@
   </nav>
 
   <div class="container">
-    <h4 id="welcome"></h4>
+    <h4 id="welcome">Welcome!</h4>
     <video id="preview" autoplay muted></video>
 
     <button id="recordBtn">Start Recording</button>
-    <button id="uploadBtn" type="button" style="background-color: slateblue;">Upload Video</button>
+    <button id="uploadBtn" type="button" style="background-color: slateblue;" disabled>Upload Video</button>
     <button id="recordAgainBtn" style="display:none;">Record Again</button>
 
     <div class="spinner" id="spinner">
@@ -222,12 +220,10 @@
         );
       });
     }
-    
 
     recordBtn.onclick = async () => {
       if (!isRecording) {
         try {
-
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showToast("Camera not supported", "error");
             return;
@@ -238,7 +234,7 @@
               video: { facingMode: { exact: "environment" } },
               audio: true
             });
-          } catch (err) {
+          } catch {
             showToast("Back camera not available, using default camera", "error");
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
           }
@@ -258,16 +254,15 @@
             uploadBtn.disabled = false;
             recordAgainBtn.style.display = "inline-block";
             status.textContent = "Recording complete.";
-
           };
 
           mediaRecorder.start();
           isRecording = true;
           recordBtn.textContent = "Stop Recording";
-          recordBtn.style.backgroundColor = "#2eab4b";
+          recordBtn.classList.add("recording");
           uploadBtn.disabled = true;
           status.textContent = "Recording...";
-        } catch (err) {
+        } catch {
           showToast("Camera access denied", "error");
         }
       } else {
@@ -275,8 +270,7 @@
         stream.getTracks().forEach(track => track.stop());
         isRecording = false;
         recordBtn.textContent = "Start Recording";
-        recordBtn.style.backgroundColor = "#007bff";
-
+        recordBtn.classList.remove("recording");
       }
     };
 
@@ -305,59 +299,64 @@
         progressBar.style.display = "block";
         status.textContent = "Uploading...";
 
-        const xhr = new XMLHttpRequest();
-        console.log("abc");
-        xhr.open("POST", "http://localhost:8000/api/v1/pothole", true);
-
-        xhr.upload.onprogress = function (e) {
-          if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressFill.style.width = percent + "%";
-          }
-        };
-
-        xhr.onload = function () {
-          spinner.style.display = "none";
-          progressBar.style.display = "none";
-          if (xhr.status === 200 || xhr.status === 201) {
-            showToast("Upload successful!", "success");
-            status.textContent = "Upload successful!";
-            resetUI();
+        await fetch("http://localhost:8000/api/v1/pothole", {
+          method: "POST",
+          body: formData
+        })
+        .then((res) => {
+          if(res.ok){
+            console.log(res.json());
+            alert(res.json())
           } else {
-            showToast("Upload failed.", "error");
-            status.textContent = "Upload failed.";
+            throw new Error("Upload failed");
           }
-        };
+        })
+        .catch((err) => {
+          alert(err)
+          console.error(err);
+          showToast("Upload failed", "error");
+          status.textContent = "Upload failed.";
+        })
 
-        xhr.onerror = function () {
-          spinner.style.display = "none";
-          progressBar.style.display = "none";
-          showToast("Network error", "error");
-          status.textContent = "Network error.";
-        };
+        // const xhr = new XMLHttpRequest();
+        // xhr.open("POST", "http://localhost:8000/api/v1/pothole", true);
 
-        xhr.send(formData);
+        // xhr.upload.onprogress = function (e) {
+        //   if (e.lengthComputable) {
+        //     const percent = Math.round((e.loaded / e.total) * 100);
+        //     progressFill.style.width = percent + "%";
+        //   }
+        // };
+
+        // xhr.onload = function () {
+        //   spinner.style.display = "none";
+        //   progressBar.style.display = "none";
+
+        //   if (xhr.status === 200 || xhr.status === 201) {
+        //     showToast("Upload successful!");
+        //     status.textContent = "Upload complete.";
+        //     uploadBtn.disabled = true;
+        //   } else {
+        //     showToast("Upload failed", "error");
+        //     status.textContent = "Upload failed.";
+        //   }
+        // };
+
+        // xhr.onerror = function () {
+        //   spinner.style.display = "none";
+        //   progressBar.style.display = "none";
+        //   showToast("Network error", "error");
+        //   status.textContent = "Upload failed due to network error.";
+        // };
+
+        // xhr.send(formData);
       } catch (err) {
         spinner.style.display = "none";
         progressBar.style.display = "none";
         showToast(err.toString(), "error");
-        status.textContent = err.toString();
+        status.textContent = "Upload failed.";
       }
     };
-
-    // const welcome = document.getElementById("welcome")
-
-    const welcome = document.getElementById("welcome");
-
-  fetch("https://pothole-recording-backend.vercel.app")
-    .then(response => response.text())
-    .then(data => {
-      welcome.textContent = data;
-    })
-    .catch(err => {
-      console.error("Failed to fetch welcome message:", err);
-      welcome.textContent = "Welcome to Pothole Reporting!";
-    });
   </script>
 </body>
 </html>

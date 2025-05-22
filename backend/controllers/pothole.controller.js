@@ -6,7 +6,6 @@ exports.sendPotholeRecordingAndLocation = async (req, res) => {
 
     console.log("reached controller...");
 
-
     if (!req.file) {
       console.log(" no video file uploaded");
       return res.status(400).json({ message: 'No video file uploaded' });
