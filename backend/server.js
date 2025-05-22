@@ -3,9 +3,9 @@ const connectDB = require("./config/dbConnection.js")
 const app = require("./app.js")
 const { Connection } = require("mongoose")
 
-dotenv.config({ 
-    path: "./.env" 
-})
+// dotenv.config({ 
+//     path: "./.env" 
+// })
 
 const PORT = process.env.PORT || 8000
 

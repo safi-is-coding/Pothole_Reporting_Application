@@ -1,0 +1,140 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100vh;
+  background-image: linear-gradient(120deg, rgb(211, 211, 255), rgb(216, 255, 216), rgb(255, 205, 214), rgb(255, 202, 255));
+}
+
+/* nav {
+  position: absolute;
+  top: 0;
+  background-color: rgb(200, 200, 255);
+  width: 100vw;
+  height: 3rem;
+  text-align: center;
+  box-shadow: 0px 2px 5px 0 gray;
+  margin-bottom: 30px;
+} */
+
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  width: 350px;
+  text-align: center;
+  position: relative;
+}
+
+h1 {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  position: relative;
+  top: 10px;
+}
+
+h4 {
+  margin-bottom: 1rem;
+  color: #585858;
+  text-decoration: underline;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+
+video {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+button {
+  padding: 0.7rem;
+  width: 100%;
+  margin: 0.3rem 0;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#recordAgainBtn {
+  background-color: #6c757d;
+}
+
+#recordAgainBtn:hover {
+  background-color: #5a6268;
+}
+
+.progress-bar {
+  width: 100%;
+  background-color: #e9ecef;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 1rem;
+  height: 10px;
+  display: none;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #28a745;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.spinner {
+  display: none;
+  margin: 10px auto;
+}
+
+.spinner div {
+  width: 18px;
+  height: 18px;
+  margin: 2px;
+  background-color: #007bff;
+  border-radius: 100%;
+  display: inline-block;
+  animation: sk-bounce 1.4s infinite ease-in-out both;
+}
+
+.spinner div:nth-child(2) {
+  animation-delay: -0.32s;
+}
+
+.spinner div:nth-child(3) {
+  animation-delay: -0.16s;
+}
+
+@keyframes sk-bounce {
+  0%, 80%, 100% { transform: scale(0); }  
+  40% { transform: scale(1.0); }
+}
+
+.status {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.recording {
+  background-color: #2eab4b;
+}
+
+.recorded {
+  background-color: #ffc107;
+}
